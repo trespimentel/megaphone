@@ -332,3 +332,151 @@ def all_pitched_down_chosen_word_slowed(y, d_pitch, p_slower, start_times, words
   # pitch down whole thing by d_pitch semitones and slow down one chosen word by p_slower %
   chosen_word_slowed = chosen_word_slower(y, p_slower, start_times, words, pos)
   return all_pitched_down(chosen_word_slowed, d_pitch)
+
+def chosen_word_pitched_and_slowed(y, d_pitch, p_slower, start_times, words, pos):
+  # pitch down one chosen word by d_pitch semitones and slow it down by p_slower %
+  import nltk
+  nltk.download('averaged_perceptron_tagger')
+  words_tagged = nltk.pos_tag(words)
+  print(words_tagged)
+
+  words = []
+  poss = []
+  for pair in words_tagged:
+    words.append(pair[0])
+    poss.append(pair[1])
+
+  if "RB" in poss or "RBR" in poss or "RBS" in poss:
+    print("adverb")
+    pos = "adverb"
+  elif "JJ" in poss or "JJR" in poss or "JJS" in poss:
+    print("adjective")
+    pos = "adjective"
+  elif "VB" in poss or "VBD" in poss or "VBG" in poss or "VBN" in poss or "VBP" in poss or "VBZ" in poss:
+    print("verb")
+    pos = "verb"
+  else:
+    print("noun")
+    pos = "noun"
+
+
+  print("pos", pos)
+
+  for i in range(len(words_tagged)):
+    word = words[i]
+    pos_specific = poss[i]
+    if pos == "adverb":
+      if pos_specific == "RB" or pos_specific == "RBR" or pos_specific == "RBS":
+        break
+    elif pos == "adjective":
+      if pos_specific == "JJ" or pos_specific == "JJR" or pos_specific == "JJS":
+        break
+    elif pos == "verb":
+      if pos_specific == "VB" or pos_specific == "VBD" or pos_specific == "VBG" or pos_specific == "VBN" or pos_specific == "VBP" or pos_specific == "VBZ":
+        print("in verb")
+        break
+    else:
+      if pos_specific == "NN" or pos_specific == "NNS" or pos_specific == "NNP" or pos_specific == "NNPS":
+        break
+
+
+  i_slow = i
+  print(i_slow)
+  j = 0
+  shifted_list = []
+
+  while j < len(start_times)-1:
+    if j == i_slow:
+      sample_shifted = librosa.effects.pitch_shift(y = y[int(start_times[j]*sr):int(start_times[j+1]*sr)], sr=sr, n_steps=-d_pitch)
+      sample_shifted = librosa.resample(sample_shifted, orig_sr=sr, target_sr=sr*(1+p_slower))
+    else:
+      sample_shifted = y[int(start_times[j]*sr):int(start_times[j+1]*sr)]
+    shifted_list.append(sample_shifted)
+    j += 1
+
+
+  if j == len(start_times) -1:
+    if j == i_slow:
+      sample_shifted = librosa.effects.pitch_shift(y = y[int(start_times[j]*sr):], sr=sr, n_steps=-d_pitch)
+      sample_shifted = librosa.resample(sample_shifted, orig_sr=sr, target_sr=sr*(1+p_slower))
+    else:
+      sample_shifted = y[int(start_times[j]*sr):]
+    shifted_list.append(sample_shifted)
+
+  new_sample = np.concatenate(shifted_list)
+  return new_sample
+
+
+
+def chosen_word_slowed_and_pitched(y, d_pitch, p_slower, start_times, words, pos):
+# pitch down one chosen word by d_pitch semitones and slow it down by p_slower %
+    import nltk
+    nltk.download('averaged_perceptron_tagger')
+    words_tagged = nltk.pos_tag(words)
+    print(words_tagged)
+
+    words = []
+    poss = []
+    for pair in words_tagged:
+        words.append(pair[0])
+        poss.append(pair[1])
+
+    if "RB" in poss or "RBR" in poss or "RBS" in poss:
+        print("adverb")
+        pos = "adverb"
+    elif "JJ" in poss or "JJR" in poss or "JJS" in poss:
+        print("adjective")
+        pos = "adjective"
+    elif "VB" in poss or "VBD" in poss or "VBG" in poss or "VBN" in poss or "VBP" in poss or "VBZ" in poss:
+        print("verb")
+        pos = "verb"
+    else:
+        print("noun")
+        pos = "noun"
+
+
+    print("pos", pos)
+
+    for i in range(len(words_tagged)):
+        word = words[i]
+        pos_specific = poss[i]
+        if pos == "adverb":
+            if pos_specific == "RB" or pos_specific == "RBR" or pos_specific == "RBS":
+                break   
+        elif pos == "adjective":
+            if pos_specific == "JJ" or pos_specific == "JJR" or pos_specific == "JJS":
+                break
+        elif pos == "verb":
+            if pos_specific == "VB" or pos_specific == "VBD" or pos_specific == "VBG" or pos_specific == "VBN" or pos_specific == "VBP" or pos_specific == "VBZ":
+                print("in verb")
+                break
+        else:
+            if pos_specific == "NN" or pos_specific == "NNS" or pos_specific == "NNP" or pos_specific == "NNPS":
+                break
+
+
+    i_slow = i
+    print(i_slow)
+    j = 0
+    shifted_list = []
+
+    while j < len(start_times)-1:
+        if j == i_slow:
+            sample_shifted = librosa.resample(y[int(start_times[j]*sr):int(start_times[j+1]*sr)], orig_sr=sr, target_sr=sr*(1+p_slower))
+            sample_shifted = librosa.effects.pitch_shift(y = sample_shifted, sr=sr, n_steps=-d_pitch)
+        else:
+            sample_shifted = y[int(start_times[j]*sr):int(start_times[j+1]*sr)]
+        shifted_list.append(sample_shifted)
+        j += 1
+
+
+    if j == len(start_times) -1:
+        if j == i_slow:
+            sample_shifted = librosa.resample(y[int(start_times[j]*sr):int(start_times[j+1]*sr)], orig_sr=sr, target_sr=sr*(1+p_slower))
+            sample_shifted = librosa.effects.pitch_shift(y = sample_shifted, sr=sr, n_steps=-d_pitch)
+        else:
+            sample_shifted = y[int(start_times[j]*sr):]
+        shifted_list.append(sample_shifted)
+
+    new_sample = np.concatenate(shifted_list)
+    return new_sample
